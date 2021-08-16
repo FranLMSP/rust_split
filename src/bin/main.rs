@@ -1,6 +1,8 @@
 use std::{thread, time};
 use std::io::{stdout, Write};
+use std::process;
 use rust_split::rs_timer::RsTimer;
+use rust_split::rs_split::RsSplit;
 
 use crossterm::{
     event::{poll, read, Event, KeyCode},
@@ -11,7 +13,15 @@ use crossterm::{
 
 
 fn main() -> Result<()> {
-    let mut rs_timer = RsTimer::new();
+    let splits = vec![
+        RsSplit::new("First split", None, None),
+        RsSplit::new("Second split", None, None),
+        RsSplit::new("Third split", None, None),
+    ];
+    let mut rs_timer = RsTimer::new(splits).unwrap_or_else(|e| {
+        eprintln!("Application error: {}", e);
+        process::exit(1);
+    });
 
     enable_raw_mode()?;
 
@@ -24,13 +34,13 @@ fn main() -> Result<()> {
             // println!("Event::{:?}\r", event);
 
             if event == Event::Key(KeyCode::Char(' ').into()) && !rs_timer.is_finished() {
-                println!("Started!");
-                rs_timer.split();
-                if rs_timer.is_finished() {
-                    println!("time in ms: {}", rs_timer.final_time());
-                }
+                match rs_timer.split() {
+                    Err(e) => {
+                        eprintln!("Application error: {}", e);
+                    },
+                    Ok(_) => (),
+                };
             }
-            println!("\r");
 
             if event == Event::Key(KeyCode::Esc.into()) {
                 break;
