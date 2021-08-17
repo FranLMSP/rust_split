@@ -45,6 +45,7 @@ impl RsSplit {
         self.new_pb = None;
         self.new_gold = None;
         self.skipped = true;
+        self.print_time();
     }
 
     pub fn reset(&mut self) {

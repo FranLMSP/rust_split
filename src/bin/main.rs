@@ -35,18 +35,21 @@ fn main() -> Result<()> {
 
             if event == Event::Key(KeyCode::Char(' ').into()) && !rs_timer.is_finished() {
                 match rs_timer.split() {
-                    Err(e) => {
-                        eprintln!("Application error: {}", e);
-                    },
+                    Err(e) => eprintln!("Application error: {}", e),
                     Ok(_) => (),
                 };
             }
 
             if event == Event::Key(KeyCode::Backspace.into()) {
                 match rs_timer.undo() {
-                    Err(e) => {
-                        eprintln!("Application error: {}", e);
-                    },
+                    Err(e) => eprintln!("Application error: {}", e),
+                    Ok(_) => (),
+                };
+            }
+
+            if event == Event::Key(KeyCode::Tab.into()) {
+                match rs_timer.skip() {
+                    Err(e) => eprintln!("Application error: {}", e),
                     Ok(_) => (),
                 };
             }

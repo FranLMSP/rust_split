@@ -80,6 +80,17 @@ impl RsTimer {
         Ok(())
     }
 
+    pub fn skip(&mut self) -> Result<(), &'static str> {
+        if self.split_pointer == self.last_split_pointer() {
+            return Ok(());
+        }
+        let mut finish_time = self.elapsed_ms();
+        let mut split = self.get_current_split()?;
+        split.skip(finish_time);
+        self.start_next_split();
+        Ok(())
+    }
+
     fn print_undo_message(&mut self) -> Result<(), &'static str> {
         let split = self.get_current_split()?;
         println!("Went back to split: {}\r", split.name());
