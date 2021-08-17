@@ -6,6 +6,7 @@ pub struct RsTimer {
     splits: Vec<RsSplit>,
     final_time: u128,
     record: u128,
+    new_record: u128,
     started: bool,
     finished: bool,
     split_pointer: usize,
@@ -21,6 +22,7 @@ impl RsTimer {
             splits: splits,
             final_time: 0,
             record: 0,
+            new_record: 0,
             split_pointer: 0,
             started: false,
             finished: false,
@@ -44,10 +46,10 @@ impl RsTimer {
             // If the timer just started, we don't need to do anything with the splits
             return Ok(());
         }
-        if self.split_pointer <= self.last_pointer() {
+        if self.split_pointer <= self.last_split_pointer() {
             self.finish_current_split()?;
 
-            if self.split_pointer < self.last_pointer() {
+            if self.split_pointer < self.last_split_pointer() {
                 println!("Starting new split\r");
                 self.start_next_split()?;
             } else {
@@ -57,34 +59,64 @@ impl RsTimer {
         Ok(())
     }
 
-    pub fn finish_current_split(&mut self) -> Result<(), &'static str> {
-        let finish_time = self.elapsed_ms();
-        if let Some(split) = self.splits.get_mut(self.split_pointer) {
-            split.finish(finish_time);
-        } else {
-            return Err("Failed to get current split information!");
+    pub fn undo(&mut self) -> Result<(), &'static str> {
+        if self.split_pointer <= 0 {
+            return Ok(());
         }
+        let current_split = self.get_current_split()?;
+        let mut split_finished = current_split.is_finished();
+        if self.split_pointer == self.last_split_pointer() && split_finished {
+            self.finished = false;
+            self.final_time = 0;
+            self.new_record = 0;
+            self.undo_current_split();
+            self.print_undo_message();
+            return Ok(());
+        }
+        self.reset_current_split();
+        self.split_pointer -= 1;
+        self.undo_current_split();
+        self.print_undo_message();
         Ok(())
     }
 
-    pub fn start_current_split(&mut self) -> Result<(), &'static str> {
-        let start_time = self.elapsed_ms();
-        if let Some(split) = self.splits.get_mut(self.split_pointer) {
-            split.start(start_time);
-        } else {
-            return Err("Failed to get nextsplit information!");
-        }
+    fn print_undo_message(&mut self) -> Result<(), &'static str> {
+        let split = self.get_current_split()?;
+        println!("Went back to split: {}\r", split.name());
         Ok(())
     }
 
-    pub fn start_next_split(&mut self) -> Result<(), &'static str> {
-        let start_time = self.elapsed_ms();
+    fn reset_current_split(&mut self) -> Result<(), &'static str> {
+        let split = self.get_current_split()?;
+        split.reset();
+        Ok(())
+    }
+
+    fn undo_current_split(&mut self) -> Result<(), &'static str> {
+        let split = self.get_current_split()?;
+        split.undo();
+        Ok(())
+    }
+
+    fn finish_current_split(&mut self) -> Result<(), &'static str> {
+        let mut finish_time = self.elapsed_ms();
+        let split = self.get_current_split()?;
+        split.finish(finish_time);
+        Ok(())
+    }
+
+    fn start_current_split(&mut self) -> Result<(), &'static str> {
+        let mut start_time = self.elapsed_ms();
+        let split = self.get_current_split()?;
+        split.start(start_time);
+        Ok(())
+    }
+
+    fn start_next_split(&mut self) -> Result<(), &'static str> {
+        let mut start_time = self.elapsed_ms();
         self.split_pointer += 1;
-        if let Some(split) = self.splits.get_mut(self.split_pointer) {
-            split.start(start_time);
-        } else {
-            return Err("Failed to get nextsplit information!");
-        }
+        let split = self.get_current_split()?;
+        split.start(start_time);
         Ok(())
     }
 
@@ -92,7 +124,7 @@ impl RsTimer {
         let final_time = self.elapsed_ms();
         self.final_time = final_time;
         if final_time < self.record {
-            self.record = final_time;
+            self.new_record = final_time;
         }
         self.finished = true;
         self.print_final_time();
@@ -110,7 +142,7 @@ impl RsTimer {
         self.record
     }
 
-    pub fn last_pointer(&self) -> usize {
+    fn last_split_pointer(&self) -> usize {
         self.splits.len() - 1
     }
 
@@ -120,5 +152,16 @@ impl RsTimer {
 
     pub fn is_finished(&self) -> bool {
         self.finished
+    }
+
+    fn get_current_split(&mut self) -> Result<&mut RsSplit, &'static str> {
+        self.get_split(self.split_pointer)
+    }
+
+    fn get_split(&mut self, ptr: usize) -> Result<&mut RsSplit, &'static str> {
+        match self.splits.get_mut(ptr) {
+            Some(split) => Ok(split),
+            None => Err("Failed to get split information!"),
+        }
     }
 }

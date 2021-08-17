@@ -47,6 +47,24 @@ impl RsSplit {
         self.skipped = true;
     }
 
+    pub fn reset(&mut self) {
+        self.start_time = 0;
+        self.finish_time = 0;
+        self.new_gold = None;
+        self.new_pb = None;
+        self.started = false;
+        self.skipped = false;
+        self.finished = false;
+    }
+
+    pub fn undo(&mut self) {
+        self.finish_time = 0;
+        self.new_pb = None;
+        self.new_gold = None;
+        self.skipped = false;
+        self.finished = false;
+    }
+
     pub fn finish(&mut self, finish_time: u128) {
         self.finish_time = finish_time;
         let time = self.time();
@@ -79,5 +97,13 @@ impl RsSplit {
             return 0;
         }
         self.finish_time - self.start_time
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.finished
     }
 }

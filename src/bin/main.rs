@@ -42,6 +42,15 @@ fn main() -> Result<()> {
                 };
             }
 
+            if event == Event::Key(KeyCode::Backspace.into()) {
+                match rs_timer.undo() {
+                    Err(e) => {
+                        eprintln!("Application error: {}", e);
+                    },
+                    Ok(_) => (),
+                };
+            }
+
             if event == Event::Key(KeyCode::Esc.into()) {
                 break;
             }
