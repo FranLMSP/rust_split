@@ -7,3 +7,5 @@ edition = "2018"
 
 [dependencies]
 crossterm = "0.20.0"
+gtk = { version = "0.2", package = "gtk4" }
+

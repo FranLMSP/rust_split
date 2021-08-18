@@ -1,5 +1,4 @@
-use std::{thread, time};
-use std::io::{stdout, Write};
+use std::time;
 use std::process;
 use rust_split::rs_timer::RsTimer;
 use rust_split::rs_split::RsSplit;

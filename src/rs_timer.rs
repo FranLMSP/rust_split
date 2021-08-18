@@ -64,19 +64,19 @@ impl RsTimer {
             return Ok(());
         }
         let current_split = self.get_current_split()?;
-        let mut split_finished = current_split.is_finished();
+        let split_finished = current_split.is_finished();
         if self.split_pointer == self.last_split_pointer() && split_finished {
             self.finished = false;
             self.final_time = 0;
             self.new_record = 0;
-            self.undo_current_split();
-            self.print_undo_message();
+            self.undo_current_split()?;
+            self.print_undo_message()?;
             return Ok(());
         }
-        self.reset_current_split();
+        self.reset_current_split()?;
         self.split_pointer -= 1;
-        self.undo_current_split();
-        self.print_undo_message();
+        self.undo_current_split()?;
+        self.print_undo_message()?;
         Ok(())
     }
 
@@ -84,10 +84,10 @@ impl RsTimer {
         if self.split_pointer == self.last_split_pointer() {
             return Ok(());
         }
-        let mut finish_time = self.elapsed_ms();
-        let mut split = self.get_current_split()?;
+        let finish_time = self.elapsed_ms();
+        let split = self.get_current_split()?;
         split.skip(finish_time);
-        self.start_next_split();
+        self.start_next_split()?;
         Ok(())
     }
 
@@ -110,21 +110,21 @@ impl RsTimer {
     }
 
     fn finish_current_split(&mut self) -> Result<(), &'static str> {
-        let mut finish_time = self.elapsed_ms();
+        let finish_time = self.elapsed_ms();
         let split = self.get_current_split()?;
         split.finish(finish_time);
         Ok(())
     }
 
     fn start_current_split(&mut self) -> Result<(), &'static str> {
-        let mut start_time = self.elapsed_ms();
+        let start_time = self.elapsed_ms();
         let split = self.get_current_split()?;
         split.start(start_time);
         Ok(())
     }
 
     fn start_next_split(&mut self) -> Result<(), &'static str> {
-        let mut start_time = self.elapsed_ms();
+        let start_time = self.elapsed_ms();
         self.split_pointer += 1;
         let split = self.get_current_split()?;
         split.start(start_time);
