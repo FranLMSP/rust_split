@@ -2,8 +2,12 @@ use std::process;
 use rust_split::rs_timer::RsTimer;
 use rust_split::rs_split::RsSplit;
 
-use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow};
+use druid::{AppLauncher, WindowDesc};
+
+use rust_split::data::AppState;
+use rust_split::data::TodoItem;
+use rust_split::view::build_ui;
+use rust_split::delegate::Delegate;
 
 fn main() {
     let splits = vec![
@@ -16,20 +20,15 @@ fn main() {
         process::exit(1);
     });
 
-    let app = Application::builder()
-        .application_id("org.gtk.rust_split")
-        .build();
-    
-    app.connect_activate(build_ui);
-
-    app.run();
-}
-
-fn build_ui(app: &Application) {
-    let window = ApplicationWindow::builder()
-        .application(app)
+    let main_window = WindowDesc::new(build_ui)
         .title("RustSplit")
-        .build();
+        .window_size((400.0, 400.0));
 
-    window.present();
+    let todos = vec![TodoItem::new("Thing one"), TodoItem::new("Thing two")];
+    let initial_state = AppState::load_from_json();
+
+    AppLauncher::with_window(main_window)
+        .delegate(Delegate {})
+        .launch(initial_state)
+        .expect("Failed to launch application");
 }
